@@ -4,6 +4,7 @@ ECHO Clean All
 REM delete files individually as to not delete any save files (if we are using this directory for mods locally)
 IF EXIST ".\_build\@filext\filext_x64.dll" ( DEL ".\_build\@filext\filext_x64.dll" )
 IF EXIST ".\_build\@filext\filext.dll" ( DEL ".\_build\@filext\filext.dll" )
+IF EXIST ".\_build\@filext\filext.so" ( DEL ".\_build\@filext\filext.so" )
 IF EXIST ".\_build\@filext\filext_x64.so" ( DEL ".\_build\@filext\filext_x64.so" )
 IF EXIST ".\_build\@filext\filext_x64.pdb" ( DEL ".\_build\@filext\filext_x64.pdb" )
 IF EXIST ".\_build\@filext\filext.pdb" ( DEL ".\_build\@filext\filext.pdb" )
@@ -18,7 +19,11 @@ IF EXIST "./Build" (
 )
 
 IF EXIST "./Build_Linux" (
-    RD /s /q "Build_Linux"
+    RD /s /q "Build_Linux32"
+)
+
+IF EXIST "./Build_Linux" (
+    RD /s /q "Build_Linux64"
 )
 
 IF EXIST "./Build_Win32" (

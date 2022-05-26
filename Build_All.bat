@@ -11,7 +11,10 @@ IF NOT EXIST Build_Win64/ (
     MKDIR Build_Win64
 )
 IF NOT EXIST Build_Linux/ (
-    MKDIR Build_Linux
+    MKDIR Build_Linux32
+)
+IF NOT EXIST Build_Linux/ (
+    MKDIR Build_Linux64
 )
 
 REM First we check if we have cmake installed at path.
@@ -37,22 +40,31 @@ SET cmake=cmake
 REM fallthrough intentionally to running cmake.
 :RUN_CMAKE
 
-%cmake% -G "Visual Studio 16 2019" -A Win32 -B "Build_Win32"
-%cmake% -G "Visual Studio 16 2019" -A x64 -B "Build_Win64"
-wsl cmake -G "Ninja" -B "Build_Linux" 
 
 IF "%~1"=="-debug" (
     echo Building - debug
-    %cmake% --build "Build_Win32" --config Debug
-    %cmake% --build "Build_Win64" --config Debug
+    %cmake% -G "Visual Studio 17 2022" -A Win32 -B "Build_Win32" -DIs64Bit:BOOL=OFF
+    %cmake% -G "Visual Studio 17 2022" -A x64 -B "Build_Win64" -DIs64Bit:BOOL=ON
+    %cmake% --build "Build_Win32" --config=Debug
+    %cmake% --build "Build_Win64" --config=Debug
     
-    wsl cmake --build "Build_Linux" --config Debug
+    wsl cmake -G "Ninja" -B "Build_Linux32" -DCMAKE_BUILD_TYPE=Debug -DIs64Bit:BOOL=OFF
+    wsl cmake -G "Ninja" -B "Build_Linux64" -DCMAKE_BUILD_TYPE=Debug -DIs64Bit:BOOL=ON
+    wsl cmake --build "Build_Linux32"
+    wsl cmake --build "Build_Linux64"
+    
     Powershell -executionpolicy remotesigned -File ./buildArmaMod.ps1 "-debug"
 ) ELSE (
     echo Building - release
-    %cmake% --build "Build_Win32" --config Release
-    %cmake% --build "Build_Win64" --config Release
+    %cmake% -G "Visual Studio 17 2022" -A Win32 -B "Build_Win32" -DIs64Bit:BOOL=OFF
+    %cmake% -G "Visual Studio 17 2022" -A x64 -B "Build_Win64" -DIs64Bit:BOOL=ON
+    %cmake% --build "Build_Win32" --config=Release
+    %cmake% --build "Build_Win64" --config=Release
     
-    wsl cmake --build "Build_Linux" --config Release
+    wsl cmake -G "Ninja" -B "Build_Linux32" -DCMAKE_BUILD_TYPE=Release -DIs64Bit:BOOL=OFF
+    wsl cmake -G "Ninja" -B "Build_Linux64" -DCMAKE_BUILD_TYPE=Release -DIs64Bit:BOOL=ON
+    wsl cmake --build "Build_Linux32"
+    wsl cmake --build "Build_Linux64"
+    
     Powershell -executionpolicy remotesigned -File ./buildArmaMod.ps1
 )
