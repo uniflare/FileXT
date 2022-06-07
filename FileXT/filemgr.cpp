@@ -9,51 +9,42 @@ using namespace std;
 
 // FILEINFO STRUCT
 
-fileInfo::fileInfo(std::string& fileName) :
+fileInfo::fileInfo(const std::filesystem::path& filepath) :
 	m_map(unordered_map<string, string>(512)),
-	m_fileName(fileName),
+	m_filepath(filepath),
 	m_currentGetID(0),
-	m_currentGetKey("")
-{
-	LOG("NEW fileInfo: %s", fileName.c_str());
+	m_currentGetKey("") {
+	LOG("NEW fileInfo: %s", filepath.c_str());
 }
 
-fileInfo::~fileInfo()
-{
-	LOG("DELETE fileinfo: %s", m_fileName.c_str());
+fileInfo::~fileInfo() {
+	LOG("DELETE fileinfo: %s", m_filepath.c_str());
 }
-
-
-
 
 // FILEMGR
 
-int filext::filemgr::open(const std::string& fName)
-{
-	LOG("open(%s)", fName.c_str());
+int filext::filemgr::open(const std::filesystem::path& filepath) {
+	LOG("open(%s)", filepath.c_str());
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		LOG("  FOUND in m_fileMap");
 	} else {
 		LOG("  NOT found in m_fileMap");
 		// Create a new entry
-		fileInfo* finfoPtr = new fileInfo(fNameStr);
-		m_fileMap[fNameStr] = finfoPtr;
+		fileInfo* finfoPtr = new fileInfo(filepath);
+		m_fileMap[filepath] = finfoPtr;
 	};
 
 	return 0; // Success
 }
 
-int filext::filemgr::close(const std::string& fName)
-{
-	LOG("close(%s)", fName.c_str());
+int filext::filemgr::close(const std::filesystem::path& filepath) {
+	LOG("close(%s)", filepath.c_str());
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		LOG("  FOUND in m_fileMap");
 		delete (search->second);
@@ -67,13 +58,11 @@ int filext::filemgr::close(const std::string& fName)
 	return 0; // Success
 }
 
-int filext::filemgr::set(const std::string& fName, const char* key, const char* value)
-{
-	LOG("set(%s, %s, %s)", fName.c_str(), key, value);
+int filext::filemgr::set(const std::filesystem::path& filepath, const char* key, const char* value) {
+	LOG("set(%s, %s, %s)", filepath.c_str(), key, value);
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		fileInfo* finfo = search->second;
 		finfo->m_map[string(key)] = string(value);
@@ -85,13 +74,11 @@ int filext::filemgr::set(const std::string& fName, const char* key, const char* 
 	};
 }
 
-int filext::filemgr::eraseKey(const std::string& fName, const char* key)
-{
-	LOG("eraseKey(%s, %s)", fName.c_str(), key);
+int filext::filemgr::eraseKey(const std::filesystem::path& filepath, const char* key) {
+	LOG("eraseKey(%s, %s)", filepath.c_str(), key);
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		fileInfo* finfo = search->second;
 		finfo->m_map.erase(string(key));
@@ -103,15 +90,13 @@ int filext::filemgr::eraseKey(const std::string& fName, const char* key)
 	};
 }
 
-int filext::filemgr::get(const std::string& fName, const char* key, string& outValue, unsigned int outputSize, bool reset)
-{
-	LOG("get(%s, %s, reset: %i, outputSize: %i)", fName.c_str(), key, reset, outputSize);
+int filext::filemgr::get(const std::filesystem::path& filepath, const char* key, string& outValue, unsigned int outputSize, bool reset) {
+	LOG("get(%s, %s, reset: %i, outputSize: %i)", filepath.c_str(), key, reset, outputSize);
 
 	unsigned int nBytesToGet = outputSize - 1; // We need to reserve some space for null
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		fileInfo* finfo = search->second;
 		string keyStr(key);
@@ -159,17 +144,15 @@ int filext::filemgr::get(const std::string& fName, const char* key, string& outV
 	}
 }
 
-int filext::filemgr::write(const std::string& fName)
-{
-	LOG("write(%s)", fName.c_str());
+int filext::filemgr::write(const std::filesystem::path& filepath) {
+	LOG("write(%s)", filepath.c_str());
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		fileInfo* finfo = search->second;
 
-		ofstream f(finfo->m_fileName, ios_base::out | ios_base::binary);
+		ofstream f(finfo->m_filepath, ios_base::out | ios_base::binary);
 		char endKey[] = { 0 };
 		char endVal[] = { 0, '\n' };
 		if (f.is_open()) {
@@ -207,17 +190,15 @@ int filext::filemgr::write(const std::string& fName)
 	return 0;
 }
 
-int filext::filemgr::read(const std::string& fName)
-{
-	LOG("read(%s)", fName.c_str());
+int filext::filemgr::read(const std::filesystem::path& filepath) {
+	LOG("read(%s)", filepath.c_str());
 
 	// Check if this file is already open
-	string fNameStr(fName);
-	auto search = m_fileMap.find(fNameStr);
+	auto search = m_fileMap.find(filepath);
 	if (search != m_fileMap.end()) {
 		fileInfo* finfo = search->second;
 
-		ifstream f(finfo->m_fileName, ios_base::in | ios_base::binary);
+		ifstream f(finfo->m_filepath, ios_base::in | ios_base::binary);
 		if (f.is_open()) {
 			// Read header
 			LOG("  Reading header: ");
@@ -225,7 +206,7 @@ int filext::filemgr::read(const std::string& fName)
 			f.seekg(0);
 			f.read((char*)&header, sizeof(fileHeader));
 			bool magicNumberOk = header.magicNumber == FILEXT_HEADER_MAGIC_NUMBER;
-			LOG("size: %i, version: %i, magic number ok: %i", header.size, header.version, (int)magicNumberOk);
+			LOG("    size: %i, version: %i, magic number ok: %i", header.size, header.version, (int)magicNumberOk);
 
 			// Bail if header is wrong
 			if (!magicNumberOk) {
@@ -240,7 +221,7 @@ int filext::filemgr::read(const std::string& fName)
 			}
 
 			// Read content into RAM
-			LOG("  File was found in file system. Reading content... ");
+			LOG("  File was found in file system. Reading content...");
 			f.seekg(0, std::ios::end);
 			unsigned int contentSize = (unsigned int)f.tellg() - header.size;
 			char* fContent = new char[contentSize];
